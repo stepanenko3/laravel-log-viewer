@@ -22,7 +22,6 @@
 ## Installation
 
 ```bash
-# Install the package
 composer require stepanenko3/laravel-log-viewer
 ```
 
