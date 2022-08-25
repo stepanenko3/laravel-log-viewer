@@ -30,7 +30,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Stepanenko3\\LogViewer\\": "src"
+            "Stepanenko3\\LaravelLogViewer\\": "src"
         }
     },
     "config": {
@@ -39,10 +39,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Stepanenko3\\LogViewer\\LogViewerServiceProvider"
+                "Stepanenko3\\LaravelLogViewer\\LogViewerServiceProvider"
             ],
             "aliases": {
-                "LogViewer": "Stepanenko3\\LogViewer\\Facades\\LogViewer"
+                "LogViewer": "Stepanenko3\\LaravelLogViewer\\Facades\\LogViewer"
             }
         }
     },
