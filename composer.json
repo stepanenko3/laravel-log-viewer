@@ -1,0 +1,51 @@
+{
+    "name": "stepanenko3/laravel-log-viewer",
+    "version": "1.0.0",
+    "description": "Fast and easy-to-use log viewer for your Laravel application",
+    "keywords": [
+        "laravel",
+        "logs",
+        "log viewer",
+        "better-log-viewer"
+    ],
+    "homepage": "https://github.com/stepanenko3/laravel-log-viewer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Artem Stepanenko",
+            "email": "stpnnk.artem@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Arunas Skirius",
+            "email": "arukomp@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "illuminate/contracts": "^8.0|^9.0",
+        "spatie/laravel-package-tools": "^1.9.2",
+        "stepanenko3/laravel-pagination": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Stepanenko3\\LogViewer\\": "src"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Stepanenko3\\LogViewer\\LogViewerServiceProvider"
+            ],
+            "aliases": {
+                "LogViewer": "Stepanenko3\\LogViewer\\Facades\\LogViewer"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
