@@ -1,6 +1,5 @@
 {
     "name": "stepanenko3/laravel-log-viewer",
-    "version": "1.0.0",
     "description": "Fast and easy-to-use log viewer for your Laravel application",
     "keywords": [
         "laravel",
