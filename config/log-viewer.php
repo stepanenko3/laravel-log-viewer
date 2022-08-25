@@ -10,7 +10,9 @@ return [
     |
     */
 
-    'files_order' => 'newest',
+    'files_order' => env('LOG_VIEWER_FILES_ORDER', 'newest'),
+
+    'per_page' => env('LOG_VIEWER_PER_PAGE', 25),
 
     /*
     |--------------------------------------------------------------------------

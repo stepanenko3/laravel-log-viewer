@@ -37,7 +37,7 @@ class LogFile
         string $query = '',
         ?array $selectedLevels = null,
         int $page = null,
-        int $perPage = 25,
+        int $perPage = null,
         string $direction = self::NEWEST_FIRST,
     ) {
         if ($selectedLevels === null) {
@@ -61,6 +61,10 @@ class LogFile
 
         if ($direction === self::NEWEST_FIRST) {
             $logQuery?->reverse();
+        }
+
+        if ($perPage === null) {
+            $perPage = config('log-viewer.per_page');
         }
 
         $levels = $logQuery?->getLevelCounts();

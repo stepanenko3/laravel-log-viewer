@@ -5,7 +5,8 @@
         "laravel",
         "logs",
         "log viewer",
-        "better-log-viewer"
+        "better-log-viewer",
+        "laravel-log-viewer"
     ],
     "homepage": "https://github.com/stepanenko3/laravel-log-viewer",
     "license": "MIT",
