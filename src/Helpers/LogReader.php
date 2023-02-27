@@ -478,6 +478,10 @@ class LogReader
         $counts = [];
 
         foreach (self::getDefaultLevels() as $level) {
+            if (!$level) {
+                continue;
+            }
+
             $counts[$level] = new LevelCount(
                 Level::from($level),
                 count($this->logIndex[$level] ?? []),
@@ -571,9 +575,13 @@ class LogReader
         );
     }
 
-    protected function makeLog(string $level, string $text, int $filePosition, $index = null)
+    protected function makeLog(string $level, string $text, int $filePosition, ?int $index = null): ?Log
     {
-        return new Log($index ?? $this->nextLogIndex, $level, $text, $this->file->name, $filePosition);
+        $log = new Log($index ?? $this->nextLogIndex, $level, $text, $this->file->name, $filePosition);
+
+        return is_int($log->index ?? null)
+            ? $log
+            : null;
     }
 
     /**

@@ -34,15 +34,19 @@ class Log
         string $fileName,
         int $filePosition,
     ) {
-        $this->index = $index;
-        $this->level = Level::from(strtolower($level));
-        $this->fileName = $fileName;
-        $this->filePosition = $filePosition;
-
         $matches = [];
         $pattern = self::LOG_CONTENT_PATTERN . $level . self::LOG_CONTENT_PATTERN_2;
         [$firstLine, $theRestOfIt] = explode("\n", $text, 2);
         preg_match($pattern, $firstLine, $matches);
+
+        if (empty($matches)) {
+            return;
+        }
+
+        $this->index = $index;
+        $this->level = Level::from(strtolower($level));
+        $this->fileName = $fileName;
+        $this->filePosition = $filePosition;
 
         $this->environment = $matches[3] ?? '';
         $this->time = Carbon::parse($matches[1])->tz(config('app.timezone', 'UTC'));
@@ -96,6 +100,12 @@ class Log
 
     public function url(): string
     {
-        return route('blv.index', ['file' => $this->fileName, 'query' => 'log-index:' . $this->index]);
+        return route(
+            'blv.index',
+            [
+                'file' => $this->fileName,
+                'query' => 'log-index:' . $this->index,
+            ]
+        );
     }
 }
