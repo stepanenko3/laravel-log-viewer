@@ -24,8 +24,8 @@
     ],
     "require": {
         "php": "^8.0",
-        "illuminate/contracts": "^8.0|^9.0|^10.0",
-        "spatie/laravel-package-tools": "^1.14.1",
+        "illuminate/contracts": "^8.0|^9.0|^10.0|^11.0",
+        "spatie/laravel-package-tools": "^1.16.2",
         "stepanenko3/laravel-pagination": "*",
         "stepanenko3/laravel-helpers": "*"
     },
