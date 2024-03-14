@@ -8,17 +8,17 @@ trait HasLocalCache
 {
     /**
      * The container holding the cached values for this model.
-     *
-     * @var array
      */
     public array $_localCache = [];
 
     /**
      * Cache the result of a callback to the given key.
+     *
+     * @param null|mixed $ttl
      */
     protected function cache(string $key, callable $callable, $ttl = null): mixed
     {
-        if (!$this->hasLocalCache($key) && !$this->hasRemoteCache($key)) {
+        if (! $this->hasLocalCache($key) && ! $this->hasRemoteCache($key)) {
             $this->cacheSet($callable(), $ttl);
         }
 
@@ -67,7 +67,9 @@ trait HasLocalCache
     }
 
     /**
-     * Get a value from the cache key
+     * Get a value from the cache key.
+     *
+     * @param null|mixed $default
      */
     protected function cacheGet(string $key, $default = null): mixed
     {
@@ -87,9 +89,9 @@ trait HasLocalCache
     /**
      * Clear the cached result for a given key.
      */
-    protected function clearLocalCache(string $key = null): void
+    protected function clearLocalCache(?string $key = null): void
     {
-        if (is_null($key)) {
+        if (null === $key) {
             $this->_localCache = [];
         } else {
             unset($this->_localCache[$key]);

@@ -9,8 +9,8 @@ use Stepanenko3\LaravelLogViewer\Helpers\LogReader;
 
 class LogFile
 {
-    const OLDEST_FIRST = 'asc';
-    const NEWEST_FIRST = 'desc';
+    public const OLDEST_FIRST = 'asc';
+    public const NEWEST_FIRST = 'desc';
 
     public static function all()
     {
@@ -22,12 +22,12 @@ class LogFile
         return LogViewer::getFile($fileName)?->download();
     }
 
-    public static function deleteFile(string $fileName)
+    public static function deleteFile(string $fileName): void
     {
         LogViewer::getFile($fileName)?->delete();
     }
 
-    public static function clearCache(string $fileName)
+    public static function clearCache(string $fileName): void
     {
         LogViewer::getFile($fileName)?->clearIndexCache();
     }
@@ -36,8 +36,8 @@ class LogFile
         string $selectedFileName = '',
         string $query = '',
         ?array $selectedLevels = null,
-        int $page = null,
-        int $perPage = null,
+        ?int $page = null,
+        ?int $perPage = null,
         string $direction = self::NEWEST_FIRST,
     ) {
         if ($selectedLevels === null) {

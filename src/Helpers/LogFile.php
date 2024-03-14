@@ -12,7 +12,7 @@ class LogFile
     ) {
     }
 
-    public static function fromPath(string $filePath): LogFile
+    public static function fromPath(string $filePath): self
     {
         return new self(
             self::relativePath(storage_path('logs'), $filePath),
@@ -20,10 +20,10 @@ class LogFile
         );
     }
 
-    public static function relativePath($from, $to, $separator = DIRECTORY_SEPARATOR)
+    public static function relativePath($from, $to, $separator = \DIRECTORY_SEPARATOR)
     {
-        $from = str_replace(array('/', '\\'), $separator, $from);
-        $to = str_replace(array('/', '\\'), $separator, $to);
+        $from = str_replace(['/', '\\'], $separator, $from);
+        $to = str_replace(['/', '\\'], $separator, $to);
 
         $arFrom = explode($separator, rtrim($from, $separator));
         $arTo = explode($separator, rtrim($to, $separator));
@@ -57,9 +57,11 @@ class LogFile
 
         if ($size > ($gb = 1024 * 1024 * 1024)) {
             return number_format($size / $gb, 2) . ' GB';
-        } elseif ($size > ($mb = 1024 * 1024)) {
+        }
+        if ($size > ($mb = 1024 * 1024)) {
             return number_format($size / $mb, 2) . ' MB';
-        } elseif ($size > ($kb = 1024)) {
+        }
+        if ($size > ($kb = 1024)) {
             return number_format($size / $kb, 2) . ' KB';
         }
 
@@ -76,7 +78,7 @@ class LogFile
         $this->logs()->clearIndexCache();
     }
 
-    public function delete()
+    public function delete(): void
     {
         unlink($this->path);
         $this->clearIndexCache();

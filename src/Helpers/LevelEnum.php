@@ -2,6 +2,8 @@
 
 namespace Stepanenko3\LaravelLogViewer\Helpers;
 
+use UnitEnum;
+
 /**
  * Unfortunately, enums are not supported in PHP 8.0, thus
  * we are currently not using this class. It was left as
@@ -22,6 +24,14 @@ enum LevelEnum: string
     case Failed = 'failed';
     case None = '';
 
+    public static function caseValues(): array
+    {
+        return array_map(
+            fn (UnitEnum $case) => $case->value,
+            self::cases()
+        );
+    }
+
     public function getClass(): string
     {
         return match ($this) {
@@ -31,13 +41,5 @@ enum LevelEnum: string
             self::Error, self::Critical, self::Alert, self::Emergency => 'danger',
             default => 'none',
         };
-    }
-
-    public static function caseValues(): array
-    {
-        return array_map(
-            fn (\UnitEnum $case) => $case->value,
-            self::cases()
-        );
     }
 }

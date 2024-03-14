@@ -9,12 +9,17 @@ class LogViewer
 {
     public static ?Collection $_cachedFiles = null;
 
+    public static function clearFileCache(): void
+    {
+        self::$_cachedFiles = null;
+    }
+
     /**
      * @return Collection|LogFile[]
      */
     public function getFiles()
     {
-        if (!isset(self::$_cachedFiles)) {
+        if (! isset(self::$_cachedFiles)) {
             $files = [];
 
             foreach (config('log-viewer.include_files', []) as $pattern) {
@@ -36,23 +41,28 @@ class LogViewer
                 case 'name':
                 case 'name_asc':
                     $files = $files->sortBy('name');
+
                     break;
 
                 case 'name_desc':
                     $files = $files->sortByDesc('name');
+
                     break;
 
                 case 'size':
                 case 'size_desc':
                     $files = $files->sortByDesc(fn ($file) => $file->size());
+
                     break;
 
                 case 'size_asc':
                     $files = $files->sortBy(fn ($file) => $file->size());
+
                     break;
 
                 case 'oldest':
                     $files = $files->sortBy(fn ($file) => $file->lastModified());
+
                     break;
 
                 case 'newest':
@@ -74,13 +84,8 @@ class LogViewer
             ->first();
     }
 
-    public function clearCacheAll()
+    public function clearCacheAll(): void
     {
         self::getFiles()->each->clearIndexCache();
-    }
-
-    public static function clearFileCache(): void
-    {
-        self::$_cachedFiles = null;
     }
 }

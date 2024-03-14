@@ -4,33 +4,33 @@ namespace Stepanenko3\LaravelLogViewer\Helpers;
 
 class Level
 {
-    const Debug = 'debug';
+    public const Debug = 'debug';
 
-    const Info = 'info';
+    public const Info = 'info';
 
-    const Notice = 'notice';
+    public const Notice = 'notice';
 
-    const Warning = 'warning';
+    public const Warning = 'warning';
 
-    const Error = 'error';
+    public const Error = 'error';
 
-    const Critical = 'critical';
+    public const Critical = 'critical';
 
-    const Alert = 'alert';
+    public const Alert = 'alert';
 
-    const Emergency = 'emergency';
+    public const Emergency = 'emergency';
 
-    const Processing = 'processing';
+    public const Processing = 'processing';
 
-    const Processed = 'processed';
+    public const Processed = 'processed';
 
-    const Failed = 'failed';
+    public const Failed = 'failed';
 
-    const None = '';
+    public const None = '';
 
     public string $value;
 
-    public function __construct(string $value = null)
+    public function __construct(?string $value = null)
     {
         $this->value = $value ?? self::None;
     }
@@ -53,9 +53,14 @@ class Level
         ];
     }
 
-    public static function from(string $value = null): self
+    public static function from(?string $value = null): self
     {
         return new self($value);
+    }
+
+    public static function caseValues(): array
+    {
+        return self::cases();
     }
 
     public function getName(): string
@@ -75,10 +80,5 @@ class Level
             self::Error, self::Critical, self::Alert, self::Emergency => 'danger',
             default => 'none',
         };
-    }
-
-    public static function caseValues(): array
-    {
-        return self::cases();
     }
 }

@@ -3,10 +3,11 @@
 namespace Stepanenko3\LaravelLogViewer\Exceptions;
 
 use Exception;
+use Throwable;
 
 class InvalidRegularExpression extends Exception
 {
-    public function __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
     {
         $error_definitions = [
             PREG_NO_ERROR => 'Code 0: No errors',

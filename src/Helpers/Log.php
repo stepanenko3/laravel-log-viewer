@@ -7,9 +7,9 @@ use Illuminate\Support\Str;
 
 class Log
 {
-    const LOG_CONTENT_PATTERN = '/^\[(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{6}[\+-]\d\d:\d\d)?)\](?:.*?(\w+)\.|.*?)';
+    public const LOG_CONTENT_PATTERN = '/^\[(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{6}[\+-]\d\d:\d\d)?)\](?:.*?(\w+)\.|.*?)';
 
-    const LOG_CONTENT_PATTERN_2 = ': (.*?)( in .*?:[0-9]+)?$/is';
+    public const LOG_CONTENT_PATTERN_2 = ': (.*?)( in .*?:[0-9]+)?$/is';
 
     public int $index;
 
@@ -51,7 +51,7 @@ class Log
         $this->environment = $matches[3] ?? '';
         $this->time = Carbon::parse($matches[1])->tz(config('app.timezone', 'UTC'));
 
-        if (!empty($matches[2])) {
+        if (! empty($matches[2])) {
             // we got microseconds!
             $this->time = $this->time->micros((int) $matches[2]);
         }
@@ -69,13 +69,14 @@ class Log
                 foreach ($excludes as $excludePattern) {
                     if (str_contains($line, $excludePattern)) {
                         $shouldExclude = true;
+
                         break;
                     }
                 }
 
                 if ($shouldExclude && end($filteredLines) !== $emptyLineCharacter) {
                     $filteredLines[] = $emptyLineCharacter;
-                } elseif (!$shouldExclude) {
+                } elseif (! $shouldExclude) {
                     $filteredLines[] = $line;
                 }
             }
@@ -85,13 +86,13 @@ class Log
         $this->fullText = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
     }
 
-    public function fullTextMatches(string $query = null): bool
+    public function fullTextMatches(?string $query = null): bool
     {
         if (empty($query)) {
             return true;
         }
 
-        if (!Str::endsWith($query, '/i')) {
+        if (! Str::endsWith($query, '/i')) {
             $query = '/' . $query . '/i';
         }
 

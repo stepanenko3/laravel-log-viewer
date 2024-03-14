@@ -5,21 +5,16 @@ namespace Stepanenko3\LaravelLogViewer\Helpers;
 class Benchmark
 {
     /**
-     * The list of various tests benchmarked
-     *
-     * @var array
+     * The list of various tests benchmarked.
      */
     public static array $tests = [];
 
     /**
-     * Begin a test instance with a given name
-     *
-     * @param  string  $name
-     * @return void
+     * Begin a test instance with a given name.
      */
     public static function time(string $name): void
     {
-        if (!array_key_exists($name, static::$tests)) {
+        if (! array_key_exists($name, static::$tests)) {
             static::$tests[$name] = [
                 'current' => [
                     'start' => null,
@@ -35,10 +30,7 @@ class Benchmark
     }
 
     /**
-     * An alias for 'time'
-     *
-     * @param  string  $name
-     * @return void
+     * An alias for 'time'.
      */
     public static function start(string $name): void
     {
@@ -47,9 +39,6 @@ class Benchmark
 
     /**
      * End a test instance for a given name and return the latest test duration.
-     *
-     * @param  string  $name
-     * @return float
      */
     public static function endTime(string $name): float
     {
@@ -65,10 +54,7 @@ class Benchmark
     }
 
     /**
-     * An alias for 'endTime'
-     *
-     * @param  string  $name
-     * @return float
+     * An alias for 'endTime'.
      */
     public static function end(string $name): float
     {
@@ -76,25 +62,17 @@ class Benchmark
     }
 
     /**
-     * Get the total runtime for a given test category
-     *
-     * @param  string  $name
-     * @return float
+     * Get the total runtime for a given test category.
      */
     public static function getTotal(string $name): float
     {
         $history = static::$tests[$name]['history'];
 
-        return array_reduce($history, function ($sum, $historyEntry) {
-            return $sum + $historyEntry['duration'];
-        }, 0);
+        return array_reduce($history, fn ($sum, $historyEntry) => $sum + $historyEntry['duration'], 0);
     }
 
     /**
-     * Get the average runtime for a given test category
-     *
-     * @param  string  $name
-     * @return float
+     * Get the average runtime for a given test category.
      */
     public static function getAverage(string $name): float
     {
@@ -102,9 +80,9 @@ class Benchmark
     }
 
     /**
-     * Dump the status about all tests
+     * Dump the status about all tests.
      */
-    public static function dump(string $name = null): void
+    public static function dump(?string $name = null): void
     {
         if ($name) {
             dump(self::results($name));
@@ -120,7 +98,7 @@ class Benchmark
     /**
      * Get the results of the benchmark.
      */
-    public static function results(string $name = null): array
+    public static function results(?string $name = null): array
     {
         if ($name) {
             $testData = static::$tests[$name];

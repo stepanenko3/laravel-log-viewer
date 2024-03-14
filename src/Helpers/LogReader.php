@@ -2,61 +2,49 @@
 
 namespace Stepanenko3\LaravelLogViewer\Helpers;
 
+use Exception;
 use Illuminate\Support\Str;
-use Stepanenko3\LaravelPagination\Pagination;
 use Stepanenko3\LaravelLogViewer\Concerns\HasLocalCache;
 use Stepanenko3\LaravelLogViewer\Exceptions\InvalidRegularExpression;
+use Stepanenko3\LaravelPagination\Pagination;
 
 class LogReader
 {
     use HasLocalCache;
 
-    const LOG_MATCH_PATTERN = '/\[\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{6}[\+-]\d\d:\d\d)?\].*/';
+    public const LOG_MATCH_PATTERN = '/\[\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{6}[\+-]\d\d:\d\d)?\].*/';
 
-    const DIRECTION_FORWARD = 'forward';
+    public const DIRECTION_FORWARD = 'forward';
 
-    const DIRECTION_BACKWARD = 'backward';
+    public const DIRECTION_BACKWARD = 'backward';
 
     /**
      * Cached LogReader instances.
-     *
-     * @var array
      */
     public static array $_instances = [];
 
+    /**
+     * Contains an index of file positions where each log is located in.
+     */
+    public array $logIndex = [];
+
     protected array $_mergedIndex;
 
-    /**
-     * @var LogFile
-     */
     protected LogFile $file;
 
     /**
      * Whether the index has been updated. Used to check whether we should write
      * the new changes to the cache.
-     *
-     * @var bool
      */
     protected bool $indexChanged = false;
 
     /**
-     * Contains an index of file positions where each log is located in.
-     *
-     * @var array
-     */
-    public array $logIndex = [];
-
-    /**
      * File size when it was last indexed.
-     *
-     * @var int
      */
     protected int $lastScanFileSize = 0;
 
     /**
      * The log levels that should be read from this file.
-     *
-     * @var array|null
      */
     protected ?array $levels = null;
 
@@ -67,16 +55,14 @@ class LogReader
     protected ?int $onlyShowIndex = null;
 
     /**
-     * The index of the next log to be read
-     *
-     * @var int
+     * The index of the next log to be read.
      */
     protected int $nextLogIndex = 0;
 
     /**
-     * @var resource|null
+     * @var null|resource
      */
-    protected $fileHandle = null;
+    protected $fileHandle;
 
     protected string $direction = self::DIRECTION_FORWARD;
 
@@ -85,19 +71,30 @@ class LogReader
         $this->file = $file;
     }
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     public static function instance(LogFile $file): self
     {
-        if (!isset(self::$_instances[$file->path])) {
+        if (! isset(self::$_instances[$file->path])) {
             self::$_instances[$file->path] = new self($file);
         }
 
         return self::$_instances[$file->path];
     }
 
+    public static function getDefaultLevels(): array
+    {
+        return Level::caseValues();
+    }
+
     /**
-     * Load only the provided log levels
+     * Load only the provided log levels.
      *
-     * @param  string|array|null  $levels
+     * @param null|array|string $levels
+     *
      * @return $this
      */
     public function only($levels = null): self
@@ -122,7 +119,7 @@ class LogReader
             $this->levels = null;
         }
 
-        unset($this->_mergedIndex);
+        $this->_mergedIndex = null;
 
         return $this;
     }
@@ -130,7 +127,8 @@ class LogReader
     /**
      * Load all log levels except the provided ones.
      *
-     * @param  string|array|null  $levels
+     * @param null|array|string $levels
+     *
      * @return $this
      */
     public function except($levels = null): self
@@ -165,11 +163,6 @@ class LogReader
         return self::getDefaultLevels();
     }
 
-    public static function getDefaultLevels(): array
-    {
-        return Level::caseValues();
-    }
-
     public function isOpen(): bool
     {
         return is_resource($this->fileHandle);
@@ -177,15 +170,15 @@ class LogReader
 
     public function isClosed(): bool
     {
-        return !$this->isOpen();
+        return ! $this->isOpen();
     }
 
     /**
      * Open the log file for reading. Most other methods will open the file automatically if needed.
      *
-     * @return $this
+     * @throws Exception
      *
-     * @throws \Exception
+     * @return $this
      */
     public function open(): self
     {
@@ -196,7 +189,7 @@ class LogReader
         $this->fileHandle = fopen($this->file->path, 'r');
 
         if ($this->fileHandle === false) {
-            throw new \Exception('Could not open "' . $this->file->path . '" for reading.');
+            throw new Exception('Could not open "' . $this->file->path . '" for reading.');
         }
 
         $this->loadIndexFromCache();
@@ -207,9 +200,9 @@ class LogReader
     /**
      * Close the file handle.
      *
-     * @return $this
+     * @throws Exception
      *
-     * @throws \Exception
+     * @return $this
      */
     public function close(): self
     {
@@ -225,7 +218,7 @@ class LogReader
             $this->fileHandle = null;
             $this->nextLogIndex = 0;
         } else {
-            throw new \Exception('Could not close the file "' . $this->file->path . '".');
+            throw new Exception('Could not close the file "' . $this->file->path . '".');
         }
 
         return $this;
@@ -239,12 +232,11 @@ class LogReader
     }
 
     /**
-     * Skip a number of logs
+     * Skip a number of logs.
      *
-     * @param  int  $number
+     * @throws Exception
+     *
      * @return $this
-     *
-     * @throws \Exception
      */
     public function skip(int $number): self
     {
@@ -254,7 +246,7 @@ class LogReader
 
         $mergedIndex = $this->getMergedIndexForSelectedLevels();
 
-        if (!empty($mergedIndex)) {
+        if (! empty($mergedIndex)) {
             if ($this->direction === self::DIRECTION_BACKWARD) {
                 // Remember, we're going backwards from highest to lowest indices.
                 foreach ($mergedIndex as $logIndex => $positionInFile) {
@@ -295,7 +287,7 @@ class LogReader
         while ($number > 0) {
             $log = $this->next();
 
-            if (is_null($log)) {
+            if (null === $log) {
                 break;
             }
 
@@ -314,7 +306,8 @@ class LogReader
         foreach ($mergedIndex as $index => $position) {
             if ($this->direction === self::DIRECTION_BACKWARD && $index <= $targetIndex) {
                 break;
-            } elseif ($this->direction === self::DIRECTION_FORWARD && $index >= $targetIndex) {
+            }
+            if ($this->direction === self::DIRECTION_FORWARD && $index >= $targetIndex) {
                 break;
             }
 
@@ -343,18 +336,18 @@ class LogReader
         return $this;
     }
 
-    public function search(string $query = null): self
+    public function search(?string $query = null): self
     {
         $this->close();
 
-        if (!empty($query) && Str::startsWith($query, 'log-index:')) {
+        if (! empty($query) && Str::startsWith($query, 'log-index:')) {
             $this->query = null;
             $this->only(null);
-            $this->onlyShow(intval(explode(':', $query)[1]));
-        } elseif (!empty($query)) {
+            $this->onlyShow((int) explode(':', $query)[1]);
+        } elseif (! empty($query)) {
             $query = '/' . $query . '/i';
 
-            if (!$this->isValidRegex($query)) {
+            if (! $this->isValidRegex($query)) {
                 throw new InvalidRegularExpression();
             }
 
@@ -366,23 +359,13 @@ class LogReader
         return $this;
     }
 
-    protected function isValidRegex(string $regexString): bool
-    {
-        set_error_handler(function () {
-        }, E_WARNING);
-        $isValidRegex = preg_match($regexString, '') !== false;
-        restore_error_handler();
-
-        return $isValidRegex;
-    }
-
     /**
      * This method scans the whole file quickly to index the logs in order to speed up
-     * the retrieval of individual logs
+     * the retrieval of individual logs.
+     *
+     * @throws Exception
      *
      * @return $this
-     *
-     * @throws \Exception
      */
     public function scan(bool $force = false): self
     {
@@ -390,7 +373,7 @@ class LogReader
             $this->open();
         }
 
-        if (!$this->requiresScan() && !$force) {
+        if (! $this->requiresScan() && ! $force) {
             return $this;
         }
 
@@ -404,7 +387,7 @@ class LogReader
         while (($line = fgets($this->fileHandle)) !== false) {
             if (preg_match(self::LOG_MATCH_PATTERN, $line) === 1) {
                 if ($currentLog !== '') {
-                    if (is_null($this->query) || preg_match($this->query, $currentLog)) {
+                    if (null === $this->query || preg_match($this->query, $currentLog)) {
                         $this->indexLogPosition($this->nextLogIndex, $currentLogLevel, $currentLogPosition);
                     }
 
@@ -418,6 +401,7 @@ class LogReader
                 foreach ($levels as $level) {
                     if (strpos($lowercaseLine, '.' . $level) || strpos($lowercaseLine, $level . ':')) {
                         $currentLogLevel = $level;
+
                         break;
                     }
                 }
@@ -427,7 +411,7 @@ class LogReader
         }
 
         if ($currentLog !== '') {
-            if ((is_null($this->query) || preg_match($this->query, $currentLog))) {
+            if (null === $this->query || preg_match($this->query, $currentLog)) {
                 $this->indexLogPosition($this->nextLogIndex, $currentLogLevel, $currentLogPosition);
             }
 
@@ -446,7 +430,7 @@ class LogReader
 
     public function reset(): self
     {
-        unset($this->_mergedIndex);
+        $this->_mergedIndex = null;
         $index = $this->getMergedIndexForSelectedLevels();
 
         if (empty($index)) {
@@ -463,13 +447,13 @@ class LogReader
     }
 
     /**
-     * @return array|LevelCount[]
+     * @throws Exception
      *
-     * @throws \Exception
+     * @return array|LevelCount[]
      */
     public function getLevelCounts(): array
     {
-        if (!$this->isOpen()) {
+        if (! $this->isOpen()) {
             $this->open();
         }
 
@@ -478,7 +462,7 @@ class LogReader
         $counts = [];
 
         foreach (self::getDefaultLevels() as $level) {
-            if (!$level) {
+            if (! $level) {
                 continue;
             }
 
@@ -493,18 +477,17 @@ class LogReader
     }
 
     /**
-     * @param  int|null  $limit
      * @return array|Log[]
      */
-    public function get(int $limit = null)
+    public function get(?int $limit = null)
     {
-        if (!is_null($limit)) {
+        if (null !== $limit) {
             $this->limit($limit);
         }
 
         $logs = [];
 
-        while (($log = $this->next()) && (is_null($this->limit) || $this->limit > 0)) {
+        while (($log = $this->next()) && (null === $this->limit || $this->limit > 0)) {
             $logs[] = $log;
             $this->limit--;
         }
@@ -552,11 +535,11 @@ class LogReader
         return count($this->getMergedIndexForSelectedLevels());
     }
 
-    public function paginate(int $perPage = 25, int $page = null)
+    public function paginate(int $perPage = 25, ?int $page = null)
     {
         $page = $page ?: Pagination::resolveCurrentPage('page');
 
-        if (!is_null($this->onlyShowIndex)) {
+        if (null !== $this->onlyShowIndex) {
             return new Pagination(
                 [$this->reset()->getLogAtIndex($this->onlyShowIndex)],
                 1,
@@ -575,6 +558,21 @@ class LogReader
         );
     }
 
+    public function clearIndexCache(): void
+    {
+        $this->clearRemoteCache($this->getIndexCacheKey());
+    }
+
+    protected function isValidRegex(string $regexString): bool
+    {
+        set_error_handler(function (): void {
+        }, E_WARNING);
+        $isValidRegex = preg_match($regexString, '') !== false;
+        restore_error_handler();
+
+        return $isValidRegex;
+    }
+
     protected function makeLog(string $level, string $text, int $filePosition, ?int $index = null): ?Log
     {
         $log = new Log($index ?? $this->nextLogIndex, $level, $text, $this->file->name, $filePosition);
@@ -585,10 +583,9 @@ class LogReader
     }
 
     /**
-     * @param  int  $index
-     * @return array|null Returns an array, [$level, $text, $position]
+     * @throws Exception
      *
-     * @throws \Exception
+     * @return null|array Returns an array, [$level, $text, $position]
      */
     protected function getLogTextAtIndex(int $index): ?array
     {
@@ -598,7 +595,7 @@ class LogReader
 
         $position = $this->getLogPositionFromIndex($index);
 
-        if (is_null($position)) {
+        if (null === $position) {
             return null;
         }
 
@@ -618,6 +615,7 @@ class LogReader
                 foreach (self::getDefaultLevels() as $level) {
                     if (strpos($lowercaseLine, '.' . $level) || strpos($lowercaseLine, $level . ':')) {
                         $currentLogLevel = $level;
+
                         break;
                     }
                 }
@@ -648,10 +646,11 @@ class LogReader
 
                 $this->nextLogIndex = $logIndex;
                 $numberSet = true;
+
                 break;
             }
 
-            if (!$numberSet) {
+            if (! $numberSet) {
                 $this->nextLogIndex++;
             }
         } else {
@@ -662,10 +661,11 @@ class LogReader
 
                 $this->nextLogIndex = $logIndex;
                 $numberSet = true;
+
                 break;
             }
 
-            if (!$numberSet) {
+            if (! $numberSet) {
                 $this->nextLogIndex--;
             }
         }
@@ -673,11 +673,11 @@ class LogReader
 
     protected function getMergedIndexForSelectedLevels(): array
     {
-        if (!isset($this->_mergedIndex)) {
+        if (! isset($this->_mergedIndex)) {
             $this->_mergedIndex = [];
 
             foreach ($this->getSelectedLevels() as $level) {
-                if (!isset($this->logIndex[$level])) {
+                if (! isset($this->logIndex[$level])) {
                     continue;
                 }
 
@@ -698,7 +698,7 @@ class LogReader
 
     protected function indexLogPosition(int $index, string $level, int $position): void
     {
-        if (!isset($this->logIndex[$level])) {
+        if (! isset($this->logIndex[$level])) {
             $this->logIndex[$level] = [];
         }
 
@@ -733,18 +733,8 @@ class LogReader
         }
     }
 
-    public function clearIndexCache(): void
-    {
-        $this->clearRemoteCache($this->getIndexCacheKey());
-    }
-
     protected function requiresScan(): bool
     {
         return $this->lastScanFileSize !== $this->file->size();
-    }
-
-    public function __destruct()
-    {
-        $this->close();
     }
 }
