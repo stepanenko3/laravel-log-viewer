@@ -28,7 +28,7 @@ class LogReader
      */
     public array $logIndex = [];
 
-    protected array $_mergedIndex;
+    protected ?array $_mergedIndex = null;
 
     protected LogFile $file;
 
