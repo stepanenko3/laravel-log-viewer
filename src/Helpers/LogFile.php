@@ -9,6 +9,7 @@ class LogFile
     public function __construct(
         public string $name,
         public string $path,
+        public ?string $sizeFormatted = null
     ) {
     }
 
